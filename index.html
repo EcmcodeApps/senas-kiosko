@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1920">
+  <title>Señas Kiosco</title>
+  <link rel="stylesheet" href="css/kiosco.css">
+</head>
+<body>
+
+  <div id="pantalla">
+
+    <!-- Zona izquierda: avatar LSC -->
+    <div id="zona-avatar">
+      <div id="avatar-label">Intérprete LSC</div>
+      <video id="video-lsc" autoplay loop muted playsinline></video>
+    </div>
+
+    <!-- Zona derecha: producto -->
+    <div id="zona-producto">
+      <div id="categoria">Cargando...</div>
+      <div id="foto-wrap">
+        <img id="foto" src="" alt="Producto">
+      </div>
+      <div id="nombre">--</div>
+      <div id="precio-wrap">
+        <span id="precio-label">Precio</span>
+        <span id="precio">$0</span>
+      </div>
+      <div id="qr-wrap">
+        <div id="canvas-qr"></div>
+        <div id="qr-texto">Escanea para más info</div>
+      </div>
+    </div>
+
+    <!-- Barra inferior -->
+    <div id="barra-inferior">
+      <div id="nombre-tienda"></div>
+      <div id="logo-sk">🤟 Señas Kiosco</div>
+      <div id="indicador-producto">
+        <span id="num-actual">1</span> de
+        <span id="num-total">0</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ✅ CDN corregido — funciona sin problemas -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Scripts del kiosco -->
+  <script src="js/config.js"></script>
+  <script src="js/catalogo.js"></script>
+  <script src="js/video.js"></script>
+  <script src="js/qr.js"></script>
+  <script src="js/carrusel.js"></script>
+
+  <!-- Arranque -->
+  <script>
+    document.getElementById('nombre-tienda').textContent = CONFIG.NOMBRE_TIENDA;
+    cargarCatalogo().then(productos => {
+      if (productos.length === 0) {
+        document.getElementById('nombre').textContent = 'Sin productos activos';
+        return;
+      }
+      iniciarCarrusel(productos);
+    });
+  </script>
+
+</body>
+</html>
