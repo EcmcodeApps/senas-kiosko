@@ -1,12 +1,19 @@
-// ── video.js v2.0 ─────────────────────────────────────────────
-// Soporta dos modos:
-// 1. Google Drive → usa iframe con /preview (funciona siempre)
-// 2. URL directa (.mp4) → usa elemento <video>
+// ── video.js v3.0 ─────────────────────────────────────────────
+// Soporta YouTube (recomendado) y MP4 directo
+// YouTube: autoplay + loop + sin controles + sin logo
 // ─────────────────────────────────────────────────────────────
 
-var videoEl   = document.getElementById('video-lsc');
+var videoEl    = document.getElementById('video-lsc');
 var zonaAvatar = document.getElementById('zona-avatar');
-var iframeEl  = null; // se crea dinámicamente
+var iframeEl   = null;
+
+
+// ── Extraer ID de YouTube ─────────────────────────────────────
+function extraerIdYoutube(url) {
+  if (!url) return null;
+  var m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
 
 
 // ── Extraer ID de Google Drive ────────────────────────────────
@@ -17,40 +24,32 @@ function extraerIdDrive(url) {
 }
 
 
-// ── Crear o reutilizar el iframe de Drive ─────────────────────
-function mostrarIframeDrive(fileId) {
-  // Ocultar el video nativo
+// ── Crear o actualizar iframe ─────────────────────────────────
+function mostrarIframe(src) {
   videoEl.style.display = 'none';
-  videoEl.src = '';
-
-  // Ocultar ícono de manos si existe
   var icono = document.getElementById('icono-manos');
   if (icono) icono.style.display = 'none';
 
-  // Crear el iframe si no existe
   if (!iframeEl) {
     iframeEl = document.createElement('iframe');
     iframeEl.id = 'iframe-lsc';
     iframeEl.setAttribute('allowfullscreen', true);
-    iframeEl.setAttribute('allow', 'autoplay');
+    iframeEl.setAttribute('allow',
+      'autoplay; fullscreen; picture-in-picture');
     iframeEl.style.cssText =
-      'width:100%;height:75vh;border:none;border-radius:16px;background:#0B6E5E;';
+      'width:100%;height:75vh;border:none;'
+      + 'border-radius:16px;background:#0B6E5E;';
     zonaAvatar.appendChild(iframeEl);
   }
 
-  // URL de preview de Drive — esta SÍ funciona en iframe
-  var nuevaUrl = 'https://drive.google.com/file/d/' + fileId + '/preview';
-
-  // Solo actualiza si cambió el video
-  if (iframeEl.src !== nuevaUrl) {
-    iframeEl.src = nuevaUrl;
+  if (iframeEl.src !== src) {
+    iframeEl.src = src;
   }
-
   iframeEl.style.display = 'block';
 }
 
 
-// ── Mostrar ícono de manos (sin video) ────────────────────────
+// ── Mostrar ícono de manos ────────────────────────────────────
 function mostrarIconoManos() {
   videoEl.style.display = 'none';
   if (iframeEl) iframeEl.style.display = 'none';
@@ -59,7 +58,8 @@ function mostrarIconoManos() {
   if (!icono) {
     icono = document.createElement('div');
     icono.id = 'icono-manos';
-    icono.innerHTML = '<svg viewBox="0 0 120 120" width="260" height="260" fill="none">'
+    icono.innerHTML =
+      '<svg viewBox="0 0 120 120" width="260" height="260" fill="none">'
       + '<rect x="30" y="60" width="60" height="45" rx="14" fill="#2ABFA3"/>'
       + '<rect x="10" y="72" width="24" height="16" rx="8" fill="#2ABFA3"/>'
       + '<rect x="32" y="30" width="14" height="36" rx="7" fill="#2ABFA3"/>'
@@ -72,10 +72,12 @@ function mostrarIconoManos() {
       + '<path d="M40 30 Q60 2 80 30" fill="none" stroke="#F4A535"'
       + ' stroke-width="2.5" stroke-linecap="round" opacity=".6"/>'
       + '</svg>'
-      + '<div style="color:#2ABFA3;font-size:22px;margin-top:16px;text-align:center">'
+      + '<div style="color:#2ABFA3;font-size:22px;'
+      + 'margin-top:16px;text-align:center">'
       + 'Video LSC próximamente</div>';
     icono.style.cssText =
-      'display:flex;flex-direction:column;align-items:center;justify-content:center;';
+      'display:flex;flex-direction:column;'
+      + 'align-items:center;justify-content:center;';
     zonaAvatar.appendChild(icono);
   }
   icono.style.display = 'flex';
@@ -90,14 +92,28 @@ function reproducirVideoLSC(urlVideo) {
     return;
   }
 
-  // ¿Es un link de Google Drive?
-  var driveId = extraerIdDrive(urlVideo);
-  if (driveId) {
-    mostrarIframeDrive(driveId);
+  // ✅ YouTube — el más confiable
+  var ytId = extraerIdYoutube(urlVideo);
+  if (ytId) {
+    // autoplay=1, mute=1, loop=1, controls=0, playlist=ID (para loop)
+    var ytSrc = 'https://www.youtube.com/embed/' + ytId
+      + '?autoplay=1&mute=1&loop=1&controls=0'
+      + '&playlist=' + ytId
+      + '&rel=0&modestbranding=1&iv_load_policy=3';
+    mostrarIframe(ytSrc);
     return;
   }
 
-  // URL directa de .mp4
+  // Google Drive — segunda opción
+  var driveId = extraerIdDrive(urlVideo);
+  if (driveId) {
+    mostrarIframe(
+      'https://drive.google.com/file/d/' + driveId + '/preview'
+    );
+    return;
+  }
+
+  // MP4 directo — tercera opción
   if (iframeEl) iframeEl.style.display = 'none';
   var icono = document.getElementById('icono-manos');
   if (icono) icono.style.display = 'none';
@@ -106,9 +122,7 @@ function reproducirVideoLSC(urlVideo) {
   if (videoEl.src !== urlVideo) {
     videoEl.src = urlVideo;
     videoEl.load();
-    videoEl.play().catch(function() {
-      mostrarIconoManos();
-    });
+    videoEl.play().catch(function() { mostrarIconoManos(); });
   }
 }
 
