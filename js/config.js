@@ -4,7 +4,7 @@ const CONFIG = {
   API_URL: 'https://n8n-production-9cab.up.railway.app/webhook/kiosco/productos',
 
   // Segundos que muestra cada producto
-  TIEMPO_PRODUCTO: 8,
+  TIEMPO_PRODUCTO: 40,
 
   // Cada cuánto refresca el catálogo (30 minutos)
   INTERVALO_REFRESH: 30 * 60 * 1000,
