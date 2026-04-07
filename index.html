@@ -6,6 +6,24 @@
   <title>Señas Kiosco</title>
   <link rel="stylesheet" href="css/kiosco.css">
 </head>
+</script>
+
+  <!-- Escala automática al tamaño del TV -->
+  <script>
+    function escalarKiosco() {
+      var escalaX = window.innerWidth / 1920;
+      var escalaY = window.innerHeight / 1080;
+      var escala = Math.min(escalaX, escalaY);
+      document.body.style.transform = 'scale(' + escala + ')';
+      document.body.style.transformOrigin = 'top left';
+      document.body.style.width = '1920px';
+      document.body.style.height = '1080px';
+    }
+    escalarKiosco();
+    window.addEventListener('resize', escalarKiosco);
+  </script>
+
+</body> 
 <body>
 
   <div id="pantalla">
